@@ -1,0 +1,174 @@
+RPC
+
+add.x
+
+struct number{
+	int a;
+	int b;
+};
+
+program ADD{
+	version ADD_ver{
+        int add(number)=1;
+	}=1;
+}=0x78965421;
+
+
+ In the terminal
+
+rpcgen -a -C add.x
+
+make-f Makefile.add
+./add_client
+
+in a new terminal tab
+./add_sever localhost
+
+add_server edit code
+
+static int  result = argp->a + argp->b;
+
+
+---------------------------------------------------------------------
+
+RMI
+
+Interface
+
+import java.rmi.*;
+
+interface addint extends Remote{
+	public int sum(int a,int b)throws RemoteException;
+
+}
+
+...............
+Implement
+
+import java.rmi.*;
+import java.rmi.server.*;
+import java.rmi.registry.*;
+
+public class addimp extends UnicastRemoteObject implements addint{
+
+	public addimp() throws RemoteException{
+		super();
+	}
+	public int sum(int a,int b) throws RemoteException{
+		return a+b;
+		
+	}
+}
+
+..................
+client
+
+import java.rmi.naming;
+
+public class calclient{
+	public static void main(String[] args) {
+		try{
+			callint Calint = (calint) Naming.lookup("test");
+			System.out.println(addint.sum(10,10));
+		}catch(Exception e){
+			System.out.println(e);
+		}
+	}
+}
+
+
+.................
+server
+
+import java.rmi.naming;
+
+public class addserver{
+	public static void main(String[] args) {
+		try{
+			addimp Addimp  = new addimp();
+
+			Naming.rebind("test",addimp);
+			System.out.println("server is reddy");
+
+		}
+
+		catch(Exception e){
+			System.out.println(e);
+
+		}
+	}
+}
+
+................
+
+terminal
+
+touch addin.java
+touch addimp.java
+touch addserver.java
+touch addclient.java
+javac addin.java
+javac addimp.java
+rmic addimp
+rmi registry &
+javac addserver.java
+java addserver
+javac addclient.java
+java addclient
+
+
+--------------------------------------------------------------
+
+
+MPI
+
+#include<mpi.h>
+#include<stdio.h>
+
+int main(){
+   MPI_Init(NULL,NULL);
+
+   int number1,number2,result;
+
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
+   int size;
+   MPI_Comm_size(MPI_COMM_WORLD,&size);
+
+
+   if (rank==0)
+   {
+   	printf("enter number 1 -\n");
+   	scanf("%d",&number1);
+
+   	printf("enter number 2 -\n");
+   	scanf("%d",&number2);
+
+   	MPI_Send(&number1,1,MPI_INT,1,0,MPI_COMM_WORLD);
+   	MPI_Send(&number2,1,MPI_INT,1,0,MPI_COMM_WORLD);
+   }
+   else if (rank==1)
+   {
+   	MPI_Recv(&number1,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+   	MPI_Recv(&number2,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+   	result=number1+number2;
+
+   	MPI_Send(&result,1,MPI_INT,2,1,MPI_COMM_WORLD);
+   }
+
+   else if (rank==2)
+   {
+   	MPI_Recv(&result,1,MPI_INT,1,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+
+   	printf("The result is : %d",result);
+   }
+
+}
+
+................
+terminal
+
+mpicc ./add.c -o add
+mpirun -np 3 ./add
